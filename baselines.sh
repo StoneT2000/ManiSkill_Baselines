@@ -1,0 +1,1 @@
+python ppo_rgb.py --env-id="PickCube-v0" --num-envs=16 --track --wandb-entity stonet2000 --seed 1788
