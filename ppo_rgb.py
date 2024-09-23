@@ -18,7 +18,7 @@ import datetime
 from collections import defaultdict
 from functools import partial
 from utils.profiling import NonOverlappingTimeProfiler
-from nets.cnn.plain_conv import PlainConv, make_mlp
+from nets.cnn.plain_conv import PlainConv, PlainConvMS3, make_mlp
 
 
 def parse_args():
@@ -110,6 +110,7 @@ def parse_args():
     return args
 
 import mani_skill2.envs
+from pick_cube_v1 import PickCubeEnv
 import env_wrappers.better_rewards # use the rewards designed by Tongzhou Mu
 import env_wrappers.better_obs # use the observations designed by Tongzhou Mu
 from mani_skill2.utils.common import flatten_state_dict, flatten_dict_space_keys
@@ -182,7 +183,7 @@ class Agent(nn.Module):
         super().__init__()
         action_dim = np.prod(envs.single_action_space.shape)
         state_dim = envs.single_observation_space['state'].shape[0]
-        self.encoder = PlainConv(in_channels=6, out_dim=256)
+        self.encoder = PlainConvMS3(in_channels=3, out_dim=256)
         self.critic = make_mlp(256+state_dim, [512, 256, 1], last_act=False)
         self.actor_mean = make_mlp(256+state_dim, [512, 256, action_dim], last_act=False)
         self.actor_logstd = nn.Parameter(torch.ones(1, action_dim) * -0.5)
@@ -358,7 +359,8 @@ if __name__ == "__main__":
     # agent setup
     agent = Agent(envs).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate)
-
+    # import matplotlib.pyplot as plt
+    # import ipdb; ipdb.set_trace()
     # ALGO Logic: Storage setup
     # each obs is like {'image': {'rgb': (B,H,W,6), 'depth': (B,H,W,2)}, 'state': (B,D)}
     obs = DictArray((args.num_steps, args.num_envs), envs.single_observation_space)
